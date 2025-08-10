@@ -23,16 +23,16 @@ const upload = multer({ storage })
 router.get('/', async (req, res, next) => {
   logger.info('/ called')
   try {
-    //Step 2: task 1 - insert code here
+    // Step 2: task 1 - insert code here
     const db = await connectToDatabase()
 
-    //Step 2: task 2 - insert code here
+    // Step 2: task 2 - insert code here
     const collection = db.collection('secondChanceItems')
 
-    //Step 2: task 3 - insert code here
+    // Step 2: task 3 - insert code here
     const secondChanceItems = await collection.find({}).toArray()
 
-    //Step 2: task 4 - insert code here
+    // Step 2: task 4 - insert code here
     res.json(secondChanceItems)
   } catch (e) {
     logger.console.error('oops something went wrong', e)
@@ -43,16 +43,16 @@ router.get('/', async (req, res, next) => {
 // Add a new item
 router.post('/', upload.single('file'), async (req, res, next) => {
   try {
-    //Step 3: task 1 - insert code here
+    // Step 3: task 1 - insert code here
     const db = await connectToDatabase()
 
-    //Step 3: task 2 - insert code here
+    // Step 3: task 2 - insert code here
     const collection = db.collection('secondChanceItems')
 
-    //Step 3: task 3 - insert code here
+    // Step 3: task 3 - insert code here
     let secondChanceItem = req.body
 
-    //Step 3: task 4 - insert code here
+    // Step 3: task 4 - insert code here
     const lastItems = await collection
       .find()
       .sort({ id: -1 })
@@ -64,7 +64,7 @@ router.post('/', upload.single('file'), async (req, res, next) => {
     secondChanceItem.date_added = Date.now()
     secondChanceItem = await collection.insertOne(secondChanceItem)
 
-    //Step 3: task 5 - insert code here
+    // Step 3: task 5 - insert code here
     res.status(201).json(secondChanceItem)
   } catch (e) {
     next(e)
@@ -113,15 +113,18 @@ router.put('/:id', async (req, res, next) => {
     }
 
     // Step 5: task 4 - insert code here
-    // Destructure req.body and update each property individually
-    const { category, condition, age_days, description, ...rest } = req.body
+    const category = req.body.category
+    const condition = req.body.condition
+    const ageDays = req.body.age_days
+    const description = req.body.description
+
     let updateFields = {}
     if (category !== undefined) updateFields.category = category
     if (condition !== undefined) updateFields.condition = condition
-    if (age_days !== undefined) {
-      updateFields.age_days = age_days
+    if (ageDays !== undefined) {
+      updateFields.age_days = ageDays
       // Calculate age_years to one decimal place
-      updateFields.age_years = Number((age_days / 365).toFixed(1))
+      updateFields.age_years = Number((ageDays / 365).toFixed(1))
     }
     if (description !== undefined) updateFields.description = description
     // Add any other custom properties
