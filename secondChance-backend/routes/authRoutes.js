@@ -2,7 +2,8 @@ const express = require('express')
 const router = express.Router()
 const connectToDatabase = require('../models/db')
 const logger = require('../logger')
-const bcrypt = require('bcrypt')
+const bcryptjs = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 const { body, validationResult } = require('express-validator')
 
 router.post('/register', async (req, res) => {
@@ -33,20 +34,20 @@ router.post('/register', async (req, res) => {
     }
 
     // Task 4: Create a hash to encrypt the password so that it is not readable in the database
-    const saltRounds = 10
-    const hashedPassword = await bcrypt.hash(plainPassword, saltRounds)
+    const salt = await bcryptjs.genSalt(10)
+    const hash = await bcryptjs.hash(req.body.password, salt)
 
     // Task 5: Insert the user into the database
     const newUser = await collection.insertOne({
       email,
-      password: hashedPassword,
+      password: hash,
       firstName,
       lastName,
       createdAt: new Date()
     })
 
     // Task 6: Create JWT authentication if passwords match with user._id as payload
-    const jwt = require('jsonwebtoken')
+
     const token = jwt.sign(
       { userId: newUser.insertedId },
       process.env.JWT_SECRET || 'adsfgkjeinoceoiwj83239y54njfnao09u',
@@ -88,7 +89,7 @@ router.post('/login', async (req, res) => {
 
     if (user) {
       // Task 4: Check if the password matches the encrypted password and send appropriate message on mismatch
-      const passwordMatch = await bcrypt.compare(password, user.password)
+      const passwordMatch = await bcryptjs.compare(password, user.password)
       if (!passwordMatch) {
         return res.status(401).json({ message: 'Invalid password' })
       }
@@ -98,7 +99,6 @@ router.post('/login', async (req, res) => {
       const userEmail = user.email
 
       // Task 6: Create JWT authentication if passwords match with user._id as payload
-      const jwt = require('jsonwebtoken')
       const authtoken = jwt.sign(
         { userId: user._id },
         process.env.JWT_SECRET || 'adsfgkjeinoceoiwj83239y54njfnao09u',
@@ -154,8 +154,8 @@ router.put(
       const { password, firstName, lastName } = req.body
       const updateFields = {}
       if (password !== undefined) {
-        const saltRounds = 10
-        updateFields.password = await bcrypt.hash(password, saltRounds)
+        const salt = await bcryptjs.genSalt(10)
+        updateFields.password = await bcryptjs.hash(password, salt)
       }
       if (firstName !== undefined) updateFields.firstName = firstName
       if (lastName !== undefined) updateFields.lastName = lastName
@@ -168,7 +168,6 @@ router.put(
       )
 
       // Task 7: Create JWT authentication with `user._id` as a payload using the secret key from the .env file
-      const jwt = require('jsonwebtoken')
       const authtoken = jwt.sign(
         { userId: updatedUser._id },
         process.env.JWT_SECRET || 'adsfgkjeinoceoiwj83239y54njfnao09u',
