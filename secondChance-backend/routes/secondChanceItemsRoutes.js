@@ -117,8 +117,7 @@ router.put('/:id', async (req, res, next) => {
     const condition = req.body.condition
     const ageDays = req.body.age_days
     const description = req.body.description
-
-    let updateFields = {}
+    const updateFields = {}
     if (category !== undefined) updateFields.category = category
     if (condition !== undefined) updateFields.condition = condition
     if (ageDays !== undefined) {
@@ -129,7 +128,7 @@ router.put('/:id', async (req, res, next) => {
     if (description !== undefined) updateFields.description = description
     // Add any other custom properties
     updateFields.updatedAt = new Date()
-    Object.assign(updateFields, rest)
+    Object.assign(updateFields)
     await collection.updateOne({ id }, { $set: updateFields })
     const updatedItem = await collection.findOneAndUpdate(
       { id },
@@ -163,7 +162,7 @@ router.delete('/:id', async (req, res, next) => {
       return res.status(404).send('secondChanceItem not found')
     }
 
-    //Step 6: task 4 - insert code here
+    // Step 6: task 4 - insert code here
     await collection.deleteOne({ id })
     res.json({ deleted: 'success' })
   } catch (e) {
