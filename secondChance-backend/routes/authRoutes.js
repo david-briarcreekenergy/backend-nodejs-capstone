@@ -24,7 +24,7 @@ router.post('/register', async (req, res) => {
         .json({ message: 'Request must include all fields' })
     }
 
-    const user = await collection.findOne({ email: email })
+    const user = await collection.findOne({ email })
 
     if (user) {
       const msg = 'email already exists'
@@ -38,11 +38,11 @@ router.post('/register', async (req, res) => {
 
     // Task 5: Insert the user into the database
     const newUser = await collection.insertOne({
-      email: email,
+      email,
       password: hashedPassword,
-      firstName: firstName,
-      lastName: lastName,
-      createdAt: new Date(),
+      firstName,
+      lastName,
+      createdAt: new Date()
     })
 
     // Task 6: Create JWT authentication if passwords match with user._id as payload
@@ -78,12 +78,13 @@ router.post('/login', async (req, res) => {
     email = email.trim()
     password = password.trim()
 
-    if (!email || email === '' || !password || password === '')
+    if (!email || email === '' || !password || password === '') {
       return res
         .status(400)
         .json({ message: 'email and password are required for login' })
+    }
 
-    const user = await collection.findOne({ email: email })
+    const user = await collection.findOne({ email })
 
     if (user) {
       // Task 4: Check if the password matches the encrypted password and send appropriate message on mismatch
@@ -151,7 +152,7 @@ router.put(
 
       // Destructure req.body and update only provided fields
       const { password, firstName, lastName } = req.body
-      let updateFields = {}
+      const updateFields = {}
       if (password !== undefined) {
         const saltRounds = 10
         updateFields.password = await bcrypt.hash(password, saltRounds)
