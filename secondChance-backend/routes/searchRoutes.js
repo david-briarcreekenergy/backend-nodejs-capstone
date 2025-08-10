@@ -2,6 +2,8 @@ const express = require('express')
 const router = express.Router()
 const connectToDatabase = require('../models/db')
 
+
+
 // Search for secondChanceItems
 router.get('/', async (req, res, next) => {
   try {

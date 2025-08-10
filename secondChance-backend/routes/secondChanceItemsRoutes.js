@@ -46,6 +46,8 @@ router.post('/', upload.single('file'), async (req, res, next) => {
     //Step 3: task 1 - insert code here
     const db = await connectToDatabase()
 
+
+    
     //Step 3: task 2 - insert code here
     const collection = db.collection('secondChanceItems')
 
