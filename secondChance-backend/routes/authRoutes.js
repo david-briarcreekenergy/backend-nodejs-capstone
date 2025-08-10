@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const connectToDatabase = require('../models/db');
 const logger = require('../logger');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 router.post('/register', async (req, res) => {
   try {
@@ -59,8 +59,60 @@ router.post('/register', async (req, res) => {
     res.json({ email, token });
   } catch (e) {
     logger.error(e);
-    // return res.status(500).send('Internal server error');
+    return res.status(500).send('Internal server error');
+    // return res.status(500).json({ error: e });
+  }
+});
+
+router.post('/login', async (req, res) => {
+  try {
+    // Task 1: Connect to `secondChance` in MongoDB through `connectToDatabase` in `db.js`.
+    const db = await connectToDatabase();
+
+    // Task 2: Access MongoDB `users` collection
+    const collection = db.collection('users');
+
+    // Task 3: Check for user credentials in database
+    let { email = null, password = null } = req.body;
+    email = email.trim();
+    password = password.trim();
+
+    if (!email || email === '' || !password || password === '')
+      return res
+        .status(400)
+        .json({ message: 'email and password are required for login' });
+
+    const user = await collection.findOne({ email: email });
+
+    if (user) {
+      // Task 4: Check if the password matches the encrypted password and send appropriate message on mismatch
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      if (!passwordMatch) {
+        return res.status(401).json({ message: 'Invalid password' });
+      }
+
+      // Task 5: Fetch user details from a database
+      const userName = user.firstName;
+      const userEmail = user.email;
+
+      // Task 6: Create JWT authentication if passwords match with user._id as payload
+      const jwt = require('jsonwebtoken');
+      const authtoken = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET || 'adsfgkjeinoceoiwj83239y54njfnao09u',
+        { expiresIn: '1h' },
+      );
+
+      return res.json({ authtoken, userName, userEmail });
+    }
+
+    // Task 7: Send appropriate message if the user is not found
+    logger.error('user not found');
+    return res.status(404).send('user not found');
+  } catch (e) {
+    logger.error(e);
     return res.status(500).json({ error: e });
+    // return res.status(500).send('Internal server error');
   }
 });
 
