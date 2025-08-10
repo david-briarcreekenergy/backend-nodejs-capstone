@@ -2,8 +2,6 @@ const express = require('express')
 const router = express.Router()
 const connectToDatabase = require('../models/db')
 
-
-
 // Search for secondChanceItems
 router.get('/', async (req, res, next) => {
   try {
@@ -13,7 +11,7 @@ router.get('/', async (req, res, next) => {
     const collection = db.collection('secondChanceItems')
 
     // Initialize the query object
-    let query = {}
+    const query = {}
 
     // Add the name filter to the query if the name parameter is not empty
     if (req.query.name && req.query.name.trim() !== '') {
