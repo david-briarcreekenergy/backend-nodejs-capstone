@@ -3,6 +3,8 @@ const router = express.Router();
 const connectToDatabase = require('../models/db');
 const logger = require('../logger');
 const bcrypt = require('bcrypt');
+const { body, validationResult } = require('express-validator');
+const { ReturnDocument } = require('mongodb');
 
 router.post('/register', async (req, res) => {
   try {
@@ -111,9 +113,74 @@ router.post('/login', async (req, res) => {
     return res.status(404).send('user not found');
   } catch (e) {
     logger.error(e);
-    return res.status(500).json({ error: e });
-    // return res.status(500).send('Internal server error');
+    return res.status(500).send('Internal server error');
   }
 });
+
+// {Insert it along with other imports} Task 1: Use the `body`,`validationResult` from `express-validator` for input validation
+
+router.put(
+  '/update',
+  body('email').trim().notEmpty().isEmail(),
+  body('password').trim().notEmpty(),
+  async (req, res) => {
+    // Task 2: Validate the input using `validationResult` and return an appropriate message if you detect an error
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      logger.error('Validation errors', errors.array());
+      return res.status(400).json({ errors: errors.array() });
+    }
+    try {
+      // Task 3: Check if `email` is present in the header and throw an appropriate error message if it is not present
+      const email = req.headers.email.trim();
+      if (!email) {
+        const msg = 'Email not in request headers';
+        logger.error(msg);
+        return res.status(400).json({ error: msg });
+      }
+
+      // Task 4: Connect to MongoDB
+      const db = await connectToDatabase();
+
+      // Task 5: Find the user credentials in database
+      const collection = db.collection('users');
+
+      const existingUser = await collection.findOne({ email });
+      existingUser.updatedAt = new Date();
+
+      // Task 6: Update the user credentials in the database
+
+      // Destructure req.body and update only provided fields
+      const { password, firstName, lastName } = req.body;
+      let updateFields = {};
+      if (password !== undefined) {
+        const saltRounds = 10;
+        updateFields.password = await bcrypt.hash(password, saltRounds);
+      }
+      if (firstName !== undefined) updateFields.firstName = firstName;
+      if (lastName !== undefined) updateFields.lastName = lastName;
+      updateFields.updatedAt = new Date();
+
+      const updatedUser = await collection.findOneAndUpdate(
+        { email },
+        { $set: updateFields },
+        { returnDocument: 'after' },
+      );
+
+      // Task 7: Create JWT authentication with `user._id` as a payload using the secret key from the .env file
+      const jwt = require('jsonwebtoken');
+      const authtoken = jwt.sign(
+        { userId: updatedUser._id },
+        process.env.JWT_SECRET || 'adsfgkjeinoceoiwj83239y54njfnao09u',
+        { expiresIn: '1h' },
+      );
+      res.json({ authtoken });
+    } catch (e) {
+      logger.error(e);
+      //   return res.status(500).send('Internal server error');
+      return res.status(500).json({ error: e });
+    }
+  },
+);
 
 module.exports = router;
