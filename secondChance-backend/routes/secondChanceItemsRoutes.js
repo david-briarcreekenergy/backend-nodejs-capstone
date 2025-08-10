@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname) // Use the original file name
-  },
+  }
 })
 
 const upload = multer({ storage: storage })
@@ -46,8 +46,6 @@ router.post('/', upload.single('file'), async (req, res, next) => {
     //Step 3: task 1 - insert code here
     const db = await connectToDatabase()
 
-
-    
     //Step 3: task 2 - insert code here
     const collection = db.collection('secondChanceItems')
 
