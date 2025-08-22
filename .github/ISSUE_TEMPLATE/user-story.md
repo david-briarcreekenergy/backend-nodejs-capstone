@@ -1,7 +1,7 @@
 ---
 name: User Story
-about: Defines a User Story
-title: New User Story
+about: 'Defines a User Story  '
+title: User Story
 labels: ''
 assignees: david-briarcreekenergy
 
